@@ -738,17 +738,35 @@
     setInterval(checkDevtools, 800);
   }
 
+  function pad2(n) {
+    return (n < 10 ? '0' : '') + n;
+  }
+
   function updateWatermark() {
     var wm = $('wm');
     if (!wm || !state.user) return;
-    var label = state.user.username + ' · ' +
-      new Date().toLocaleString('zh-CN', { hour12: false });
-    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="420" height="280">' +
-      '<text x="40" y="170" fill="#0b0d10" font-size="14" font-family="sans-serif"' +
-      ' transform="rotate(-20 210 140)">' + label.replace(/&/g, '&amp;') + '</text></svg>';
+
+    var now = new Date();
+    var timeText = pad2(now.getFullYear() % 100) + '/' + pad2(now.getMonth() + 1) + '/' +
+      pad2(now.getDate()) + ' ' + pad2(now.getHours()) + ':' + pad2(now.getMinutes());
+    var roleText = state.user.role === 'admin' ? '管理员' : '普通账号';
+    var label = '用户:' + state.user.username + ' 时间:' + timeText + ' 权限:' + roleText;
+
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="330" height="130">' +
+      '<text x="14" y="78" fill="#0b0d10" font-size="12" font-family="sans-serif"' +
+      ' transform="rotate(-14 165 65)">' + escapeXml(label) + '</text></svg>';
+
     wm.style.backgroundImage = 'url("data:image/svg+xml;charset=utf-8,' +
       encodeURIComponent(svg) + '")';
     wm.hidden = false;
+  }
+
+  function escapeXml(text) {
+    return String(text)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
   }
 
   function hideWatermark() {

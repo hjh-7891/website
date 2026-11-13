@@ -511,13 +511,13 @@ input, textarea, select {
   user-select: text;
 }
 
-/* 全屏水印：账号 + 时间，降低截图外传价值 */
+/* 全屏水印：账号 + 时间 + 权限，降低截图外传价值 */
 .watermark {
   position: fixed;
   inset: 0;
   z-index: 900;
   pointer-events: none;
-  opacity: .075;
+  opacity: .12;
   background-repeat: repeat;
   background-position: 0 0;
 }
