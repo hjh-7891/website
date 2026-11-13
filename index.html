@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>青枫社区违规处罚记录系统</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ================= 登录页 ================= -->
+<div id="loginView" class="login-view">
+  <form id="loginForm" class="login-card" autocomplete="off">
+    <div class="brand">
+      <span class="brand-mark">QF</span>
+      <div class="brand-text">
+        <h1>青枫社区违规处罚记录系统</h1>
+        <p>违规登记 · 账号管理</p>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="loginUser">用户名</label>
+      <input id="loginUser" name="username" autocomplete="username" spellcheck="false" required>
+    </div>
+
+    <div class="field">
+      <label for="loginPass">密码</label>
+      <input id="loginPass" name="password" type="password" autocomplete="current-password" required>
+    </div>
+
+    <label class="remember-row" for="loginRemember">
+      <input id="loginRemember" type="checkbox">
+      <span>30 天免登录<span class="remember-note">（公共电脑请勿勾选）</span></span>
+    </label>
+
+    <p id="loginError" class="error-text" hidden></p>
+
+    <button type="submit" class="btn btn-primary btn-block" id="loginSubmit">登录</button>
+
+    <p class="login-hint">账号由管理员统一分配，没有账号请联系管理员开通。</p>
+  </form>
+</div>
+
+<!-- ================= 主界面 ================= -->
+<div id="appView" class="app-view" hidden>
+  <header class="topbar">
+    <div class="topbar-left">
+      <span class="brand-mark small">QF</span>
+      <span class="topbar-title">青枫社区违规处罚记录系统</span>
+    </div>
+    <div class="topbar-right">
+      <span class="who"><span id="currentUserLabel"></span><span class="role-tag" id="currentUserRole"></span></span>
+      <button type="button" class="btn btn-ghost" id="btnUserManage">账号管理</button>
+      <button type="button" class="btn btn-ghost" id="btnChangePassword">修改密码</button>
+      <button type="button" class="btn btn-ghost" id="btnLogout">退出登录</button>
+    </div>
+  </header>
+
+  <div class="workspace" id="workspacePane">
+
+    <!-- 违规记录登记 -->
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <h2>违规记录登记</h2>
+          <p class="panel-sub">登录后均可录入，编辑与删除仅管理员可操作</p>
+        </div>
+      </div>
+
+      <form id="recordForm" class="record-form" autocomplete="off">
+        <div class="field">
+          <label for="rViolator">违规人 <b class="req">*</b></label>
+          <input id="rViolator" maxlength="50" placeholder="违规人昵称" required>
+        </div>
+        <div class="field">
+          <label for="rSteam">64ID <b class="req">*</b></label>
+          <div class="input-group">
+            <input id="rSteam" maxlength="50" placeholder="7656119xxxxxxxxxx" required>
+            <span class="input-suffix">@steam</span>
+          </div>
+        </div>
+        <div class="field">
+          <label for="rHandler">处理人 <b class="req">*</b></label>
+          <input id="rHandler" maxlength="50" placeholder="填写处理人姓名" required>
+        </div>
+        <div class="field">
+          <label for="rTime">处理时间 <b class="req">*</b></label>
+          <input id="rTime" type="datetime-local" required>
+        </div>
+        <div class="field span-2">
+          <label for="rType">违规类型 <b class="req">*</b></label>
+          <input id="rType" maxlength="100" placeholder="如：使用外挂" required>
+        </div>
+        <div class="field span-2">
+          <label for="rResult">处理结果 <b class="req">*</b></label>
+          <textarea id="rResult" rows="2" maxlength="2000" placeholder="如：封禁 7 天，已通知当事人" required></textarea>
+        </div>
+        <div class="field span-4">
+          <label for="rRemark">备注 <span class="opt">选填</span></label>
+          <textarea id="rRemark" rows="2" maxlength="2000" placeholder="补充说明"></textarea>
+        </div>
+        <div class="form-actions span-4">
+          <button type="submit" class="btn btn-primary">提交记录</button>
+          <button type="reset" class="btn btn-ghost">清空</button>
+          <span class="form-tip" id="recordFormTip" hidden></span>
+        </div>
+      </form>
+    </section>
+
+    <!-- 下栏：违规记录列表 -->
+    <section class="panel records-panel">
+      <div class="panel-head">
+        <div>
+          <h2>违规记录列表 <span class="count" id="recordCount">0</span></h2>
+          <p class="panel-sub">按违规人、64ID、处理人、违规类型、处理结果或备注筛选</p>
+        </div>
+      </div>
+
+      <div class="search-row">
+        <input id="recordSearch" class="search" placeholder="搜索 违规人 / 64ID / 处理人 / 违规类型 / 处理结果 / 备注">
+      </div>
+
+      <div class="table-wrap">
+        <table class="table" id="recordTable">
+          <thead>
+            <tr>
+              <th style="width:12%">违规人</th>
+              <th style="width:16%">64ID</th>
+              <th style="width:8%">处理人</th>
+              <th style="width:12%">处理时间</th>
+              <th style="width:16%">处理结果</th>
+              <th style="width:11%">违规类型</th>
+              <th style="width:15%">备注</th>
+              <th style="width:10%" class="col-actions admin-only">操作</th>
+            </tr>
+          </thead>
+          <tbody id="recordBody"></tbody>
+        </table>
+        <div class="empty-state" id="recordEmpty" hidden>暂无记录</div>
+      </div>
+
+      <div class="pager" id="recordPager" hidden>
+        <button type="button" class="btn btn-ghost btn-sm" id="pagePrev">上一页</button>
+        <span class="pager-info" id="pageInfo"></span>
+        <button type="button" class="btn btn-ghost btn-sm" id="pageNext">下一页</button>
+      </div>
+    </section>
+
+  </div><!-- /工作台 -->
+
+  <!-- ================= 账号管理（仅管理员） ================= -->
+  <div class="workspace" id="usersPane" hidden>
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <h2>账号管理</h2>
+          <p class="panel-sub">账号由管理员统一管理，不开放自行注册；停用、重置密码、删除均在此操作</p>
+        </div>
+        <div class="head-actions">
+          <button type="button" class="btn btn-primary btn-sm admin-only" id="btnAddUser">新增账号</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="btnBackWorkspace">返回工作台</button>
+        </div>
+      </div>
+
+      <div class="user-stats">
+        <div class="stat"><span id="statTotal">0</span><label>账号总数</label></div>
+        <div class="stat"><span id="statActive">0</span><label>正常</label></div>
+        <div class="stat"><span id="statAdmin">0</span><label>管理员</label></div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table table-user">
+          <thead>
+            <tr>
+              <th style="width:26%">用户名</th>
+              <th style="width:14%">角色</th>
+              <th style="width:12%">状态</th>
+              <th style="width:20%">创建时间</th>
+              <th style="width:28%" class="col-actions admin-only">操作</th>
+            </tr>
+          </thead>
+          <tbody id="userBody"></tbody>
+        </table>
+      </div>
+
+      <p class="panel-foot">账号与记录统一存放在云端，任何设备登录后看到的都是同一份数据。</p>
+    </section>
+  </div>
+</div>
+
+<!-- 弹窗：编辑记录 -->
+<dialog id="dlgRecord" class="dlg">
+  <form id="editRecordForm" method="dialog" class="dlg-form" autocomplete="off">
+    <h3>编辑违规记录</h3>
+    <div class="field"><label for="eVilator">违规人</label><input id="eVilator" maxlength="50" required></div>
+    <div class="field"><label for="eSteam">64ID</label><div class="input-group"><input id="eSteam" maxlength="50" required><span class="input-suffix">@steam</span></div></div>
+    <div class="field"><label for="eType">违规类型</label><input id="eType" maxlength="100" required></div>
+    <div class="field"><label for="eHandler">处理人</label><input id="eHandler" maxlength="50" required></div>
+    <div class="field"><label for="eTime">处理时间</label><input id="eTime" type="datetime-local" required></div>
+    <div class="field"><label for="eResult">处理结果</label><textarea id="eResult" rows="2" maxlength="2000" required></textarea></div>
+    <div class="field"><label for="eRemark">备注</label><textarea id="eRemark" rows="2" maxlength="2000"></textarea></div>
+    <p class="error-text" id="editError" hidden></p>
+    <div class="dlg-actions">
+      <button type="button" class="btn btn-ghost" data-close>取消</button>
+      <button type="submit" class="btn btn-primary">保存修改</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- 弹窗：新增账号 -->
+<dialog id="dlgUser" class="dlg">
+  <form id="addUserForm" method="dialog" class="dlg-form" autocomplete="off">
+    <h3>新增账号</h3>
+    <div class="field"><label for="nuName">用户名</label><input id="nuName" maxlength="20" placeholder="2–20 位，中英文/数字/下划线" required></div>
+    <div class="field"><label for="nuPass">初始密码</label><input id="nuPass" type="password" minlength="6" placeholder="至少 6 位" required></div>
+    <div class="field">
+      <label for="nuRole">角色</label>
+      <select id="nuRole">
+        <option value="normal">普通账号（可登记，不可管理）</option>
+        <option value="admin">管理员（可管理账号与记录）</option>
+      </select>
+    </div>
+    <p class="error-text" id="userError" hidden></p>
+    <div class="dlg-actions">
+      <button type="button" class="btn btn-ghost" data-close>取消</button>
+      <button type="submit" class="btn btn-primary">创建账号</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- 弹窗：修改自己的密码 -->
+<dialog id="dlgPassword" class="dlg">
+  <form id="passwordForm" method="dialog" class="dlg-form" autocomplete="off">
+    <h3>修改密码</h3>
+    <p class="dlg-note">修改后请用新密码重新登录。</p>
+    <div class="field"><label for="pwOld">原密码</label><input id="pwOld" type="password" required></div>
+    <div class="field"><label for="pwNew">新密码</label><input id="pwNew" type="password" minlength="6" placeholder="至少 6 位" required></div>
+    <p class="error-text" id="pwError" hidden></p>
+    <div class="dlg-actions">
+      <button type="button" class="btn btn-ghost" data-close>取消</button>
+      <button type="submit" class="btn btn-primary">确认修改</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- 弹窗：重置他人密码 -->
+<dialog id="dlgReset" class="dlg">
+  <form id="resetForm" method="dialog" class="dlg-form" autocomplete="off">
+    <h3>重置密码</h3>
+    <p class="dlg-note" id="resetTargetNote"></p>
+    <div class="field"><label for="resetPass">新密码</label><input id="resetPass" type="password" minlength="6" placeholder="至少 6 位" required></div>
+    <p class="error-text" id="resetError" hidden></p>
+    <div class="dlg-actions">
+      <button type="button" class="btn btn-ghost" data-close>取消</button>
+      <button type="submit" class="btn btn-primary">重置</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="toast" class="toast" hidden></div>
+
+<!-- 全屏水印（登录后显示，记录当前账号与时间） -->
+<div id="wm" class="watermark" hidden aria-hidden="true"></div>
+
+<!-- 开发者工具提示遮罩 -->
+<div id="devtoolsGuard" class="devtools-guard" hidden>
+  <div class="devtools-guard-box">
+    <p class="devtools-guard-title">检测到开发者工具已打开</p>
+    <p class="devtools-guard-sub">请关闭开发者工具后继续使用本系统</p>
+  </div>
+</div>
+
+<!-- 窗口失焦遮罩（切到其他应用时自动模糊） -->
+<div id="awayGuard" class="away-guard" hidden>
+  <p>已离开当前窗口，内容已自动模糊</p>
+  <p class="away-guard-sub">点击页面任意位置即可恢复显示</p>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
