@@ -6,10 +6,12 @@
   'use strict';
 
   var TOKEN_KEY = 'vr_token';
+  var REMEMBER_KEY = 'vr_remember_30d';
+  var REMEMBER_DAYS = 30;
   var PAGE_SIZE = 10;
 
   var state = {
-    token: sessionStorage.getItem(TOKEN_KEY) || '',
+    token: sessionStorage.getItem(TOKEN_KEY) || readRememberToken(),
     user: null,
     records: [],
     users: [],
@@ -100,6 +102,43 @@
   }
 
   /* ---------------------------------------------------------------- */
+  /* 30 天免登录：token 存在 localStorage，到期时间一起存               */
+  /* ---------------------------------------------------------------- */
+
+  function readRememberToken() {
+    try {
+      var raw = localStorage.getItem(REMEMBER_KEY);
+      if (!raw) return '';
+      var saved = JSON.parse(raw);
+      if (!saved || !saved.token) return '';
+      if (typeof saved.exp === 'number' && Date.now() > saved.exp) {
+        localStorage.removeItem(REMEMBER_KEY);
+        return '';
+      }
+      return saved.token;
+    } catch (e) {
+      return '';
+    }
+  }
+
+  function saveRememberToken(token) {
+    try {
+      localStorage.setItem(REMEMBER_KEY, JSON.stringify({
+        token: token,
+        exp: Date.now() + REMEMBER_DAYS * 24 * 3600 * 1000
+      }));
+    } catch (e) {
+      /* 隐私模式写入失败时忽略，本次登录仍可用 */
+    }
+  }
+
+  function clearRememberToken() {
+    try {
+      localStorage.removeItem(REMEMBER_KEY);
+    } catch (e) { /* 忽略 */ }
+  }
+
+  /* ---------------------------------------------------------------- */
   /* 登录 / 退出                                                       */
   /* ---------------------------------------------------------------- */
 
@@ -107,6 +146,7 @@
     state.token = '';
     state.user = null;
     sessionStorage.removeItem(TOKEN_KEY);
+    clearRememberToken();
     $('appView').hidden = true;
     $('loginView').hidden = false;
     $('recordForm').reset();
@@ -121,6 +161,8 @@
     $('recordSearch').value = '';
     $('loginView').hidden = true;
     $('appView').hidden = false;
+    $('workspacePane').hidden = false;
+    $('usersPane').hidden = true;
     $('appView').classList.toggle('is-admin', user.role === 'admin');
     $('currentUserLabel').textContent = user.username;
     $('currentUserRole').textContent = user.role === 'admin' ? '管理员' : '普通账号';
@@ -129,16 +171,21 @@
     refreshAll();
   }
 
-  function login(username, password) {
+  function login(username, password, remember) {
     var btn = $('loginSubmit');
     btn.disabled = true;
     btn.textContent = '登录中…';
     setError($('loginError'), '');
 
-    return api('/api/login', { method: 'POST', body: { username: username, password: password } })
+    return api('/api/login', { method: 'POST', body: { username: username, password: password, remember: Boolean(remember) } })
       .then(function (data) {
         state.token = data.token;
         sessionStorage.setItem(TOKEN_KEY, data.token);
+        if (remember) {
+          saveRememberToken(data.token);
+        } else {
+          clearRememberToken();
+        }
         enterApp(data.user);
       })
       .catch(function (err) {
@@ -154,6 +201,7 @@
     var token = state.token;
     state.token = '';
     sessionStorage.removeItem(TOKEN_KEY);
+    clearRememberToken();
     if (token) {
       fetch('/api/logout', { method: 'POST', headers: { Authorization: 'Bearer ' + token } })
         .catch(function () { /* 忽略 */ });
@@ -166,7 +214,9 @@
   /* ---------------------------------------------------------------- */
 
   function refreshAll() {
-    return Promise.all([loadRecords(), loadUsers()]).catch(function (err) {
+    var tasks = [loadRecords()];
+    if (state.user && state.user.role === 'admin') tasks.push(loadUsers());
+    return Promise.all(tasks).catch(function (err) {
       toast(err.message, true);
     });
   }
@@ -527,10 +577,31 @@
   /* 事件绑定                                                          */
   /* ---------------------------------------------------------------- */
 
+  /* ---------------------------------------------------------------- */
+  /* 视图切换：工作台 / 账号管理（账号管理仅管理员可进入）              */
+  /* ---------------------------------------------------------------- */
+
+  function openUserManage() {
+    if (!state.user || state.user.role !== 'admin') {
+      toast('你不是管理员，无法进入账号管理', true);
+      return;
+    }
+    $('workspacePane').hidden = true;
+    $('usersPane').hidden = false;
+    loadUsers().catch(function (err) { toast(err.message, true); });
+    window.scrollTo(0, 0);
+  }
+
+  function backToWorkspace() {
+    $('usersPane').hidden = true;
+    $('workspacePane').hidden = false;
+    window.scrollTo(0, 0);
+  }
+
   function bindEvents() {
     $('loginForm').addEventListener('submit', function (event) {
       event.preventDefault();
-      login($('loginUser').value.trim(), $('loginPass').value);
+      login($('loginUser').value.trim(), $('loginPass').value, $('loginRemember').checked);
     });
 
     $('recordForm').addEventListener('submit', submitRecord);
@@ -541,6 +612,8 @@
 
     $('btnLogout').addEventListener('click', logout);
     $('btnAddUser').addEventListener('click', openAddUser);
+    $('btnUserManage').addEventListener('click', openUserManage);
+    $('btnBackWorkspace').addEventListener('click', backToWorkspace);
 
     $('btnChangePassword').addEventListener('click', function () {
       $('passwordForm').reset();

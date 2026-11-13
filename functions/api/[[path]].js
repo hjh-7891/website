@@ -13,6 +13,7 @@
 const DB_KEY = 'db';
 const DB_VERSION = 1;
 const SESSION_HOURS = 12;
+const REMEMBER_HOURS = 24 * 30;
 const TOKEN_PREFIX = 'v1';
 
 /* ------------------------------------------------------------------ */
@@ -143,11 +144,11 @@ async function hmacKey(secret) {
   );
 }
 
-async function signToken(user, secret) {
+async function signToken(user, secret, ttlHours) {
   const payload = {
     uid: user.id,
     pv: user.pv || 1,
-    exp: Date.now() + SESSION_HOURS * 3600 * 1000
+    exp: Date.now() + (ttlHours || SESSION_HOURS) * 3600 * 1000
   };
   const body = TOKEN_PREFIX + '.' + b64urlEncodeText(JSON.stringify(payload));
   const key = await hmacKey(secret);
@@ -269,6 +270,10 @@ async function handleApi(request, env, url) {
 
   /* ---- 登录（不需要 token） ---- */
   if (path === '/api/login' && method === 'POST') {
+    if (!env.TOKEN_SECRET) {
+      return fail('未配置 TOKEN_SECRET：请在 Pages 项目的「变量和密钥」里添加，值为任意 32 位以上随机字符串，添加后必须重新部署', 500);
+    }
+
     const username = str(body.username, 20);
     const password = String(body.password || '');
     if (!username || !password) return fail('请输入用户名和密码', 400);
@@ -280,8 +285,9 @@ async function handleApi(request, env, url) {
     const hash = await hashPassword(user.salt, password);
     if (hash !== user.passwordHash) return fail('用户名或密码错误', 401);
 
-    const token = await signToken(user, env.TOKEN_SECRET);
-    return ok({ token, user: publicUser(user) });
+    const remember = Boolean(body.remember);
+    const token = await signToken(user, env.TOKEN_SECRET, remember ? REMEMBER_HOURS : SESSION_HOURS);
+    return ok({ token, user: publicUser(user), remember });
   }
 
   if (path === '/api/logout' && method === 'POST') {

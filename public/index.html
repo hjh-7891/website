@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>违规记录管理系统</title>
+<title>青枫社区违规处罚记录系统</title>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -12,9 +12,9 @@
 <div id="loginView" class="login-view">
   <form id="loginForm" class="login-card" autocomplete="off">
     <div class="brand">
-      <span class="brand-mark">VR</span>
+      <span class="brand-mark">QF</span>
       <div class="brand-text">
-        <h1>违规记录管理系统</h1>
+        <h1>青枫社区违规处罚记录系统</h1>
         <p>违规登记 · 账号管理</p>
       </div>
     </div>
@@ -29,6 +29,11 @@
       <input id="loginPass" name="password" type="password" autocomplete="current-password" required>
     </div>
 
+    <label class="remember-row" for="loginRemember">
+      <input id="loginRemember" type="checkbox">
+      <span>30 天免登录<span class="remember-note">（公共电脑请勿勾选）</span></span>
+    </label>
+
     <p id="loginError" class="error-text" hidden></p>
 
     <button type="submit" class="btn btn-primary btn-block" id="loginSubmit">登录</button>
@@ -41,19 +46,20 @@
 <div id="appView" class="app-view" hidden>
   <header class="topbar">
     <div class="topbar-left">
-      <span class="brand-mark small">VR</span>
-      <span class="topbar-title">违规记录管理系统</span>
+      <span class="brand-mark small">QF</span>
+      <span class="topbar-title">青枫社区违规处罚记录系统</span>
     </div>
     <div class="topbar-right">
       <span class="who"><span id="currentUserLabel"></span><span class="role-tag" id="currentUserRole"></span></span>
+      <button type="button" class="btn btn-ghost" id="btnUserManage">账号管理</button>
       <button type="button" class="btn btn-ghost" id="btnChangePassword">修改密码</button>
       <button type="button" class="btn btn-ghost" id="btnLogout">退出登录</button>
     </div>
   </header>
 
-  <div class="workspace">
+  <div class="workspace" id="workspacePane">
 
-    <!-- 左栏 -->
+    <!-- 违规记录登记 -->
     <section class="panel">
       <div class="panel-head">
         <div>
@@ -87,28 +93,37 @@
           <label for="rRemark">备注 <span class="opt">选填</span></label>
           <textarea id="rRemark" rows="2" maxlength="2000" placeholder="补充说明"></textarea>
         </div>
-        <div class="form-actions span-2">
+        <div class="form-actions span-4">
           <button type="submit" class="btn btn-primary">提交记录</button>
           <button type="reset" class="btn btn-ghost">清空</button>
           <span class="form-tip" id="recordFormTip" hidden></span>
         </div>
       </form>
+    </section>
 
-      <div class="list-head">
-        <h3>记录列表 <span class="count" id="recordCount">0</span></h3>
-        <input id="recordSearch" class="search" placeholder="搜索 Steam64ID / 类型 / 处理人 / 结果">
+    <!-- 下栏：违规记录列表 -->
+    <section class="panel records-panel">
+      <div class="panel-head">
+        <div>
+          <h2>违规记录列表 <span class="count" id="recordCount">0</span></h2>
+          <p class="panel-sub">按 Steam64ID、违规类型、处理人、处理结果或备注筛选</p>
+        </div>
+      </div>
+
+      <div class="search-row">
+        <input id="recordSearch" class="search" placeholder="搜索 Steam64ID / 违规类型 / 处理人 / 处理结果 / 备注">
       </div>
 
       <div class="table-wrap">
         <table class="table" id="recordTable">
           <thead>
             <tr>
-              <th style="width:15%">Steam64ID</th>
+              <th style="width:16%">Steam64ID</th>
               <th style="width:13%">违规类型</th>
-              <th style="width:18%">处理结果</th>
+              <th style="width:19%">处理结果</th>
               <th style="width:9%">处理人</th>
               <th style="width:13%">处理时间</th>
-              <th style="width:22%">备注</th>
+              <th style="width:20%">备注</th>
               <th style="width:10%" class="col-actions admin-only">操作</th>
             </tr>
           </thead>
@@ -124,18 +139,19 @@
       </div>
     </section>
 
-    <!-- 右栏 -->
+  </div><!-- /工作台 -->
+
+  <!-- ================= 账号管理（仅管理员） ================= -->
+  <div class="workspace" id="usersPane" hidden>
     <section class="panel">
       <div class="panel-head">
         <div>
-          <h2>账号名单</h2>
-          <p class="panel-sub">账号由管理员统一管理，不开放自行注册</p>
+          <h2>账号管理</h2>
+          <p class="panel-sub">账号由管理员统一管理，不开放自行注册；停用、重置密码、删除均在此操作</p>
         </div>
         <div class="head-actions">
           <button type="button" class="btn btn-primary btn-sm admin-only" id="btnAddUser">新增账号</button>
-          <button type="button" class="btn btn-ghost btn-sm admin-only" id="btnExport">导出 JSON</button>
-          <button type="button" class="btn btn-ghost btn-sm admin-only" id="btnImport">导入 JSON</button>
-          <input type="file" id="importFile" accept=".json,application/json" hidden>
+          <button type="button" class="btn btn-ghost btn-sm" id="btnBackWorkspace">返回工作台</button>
         </div>
       </div>
 
@@ -149,20 +165,19 @@
         <table class="table table-user">
           <thead>
             <tr>
-              <th style="width:30%">用户名</th>
-              <th style="width:16%">角色</th>
-              <th style="width:14%">状态</th>
-              <th style="width:22%">创建时间</th>
-              <th style="width:18%" class="col-actions admin-only">操作</th>
+              <th style="width:26%">用户名</th>
+              <th style="width:14%">角色</th>
+              <th style="width:12%">状态</th>
+              <th style="width:20%">创建时间</th>
+              <th style="width:28%" class="col-actions admin-only">操作</th>
             </tr>
           </thead>
           <tbody id="userBody"></tbody>
         </table>
       </div>
 
-      <p class="panel-foot">数据保存在当前浏览器的本地存储中，换电脑前请用「导出 JSON」备份。</p>
+      <p class="panel-foot">账号与记录统一存放在云端，任何设备登录后看到的都是同一份数据。</p>
     </section>
-
   </div>
 </div>
 
