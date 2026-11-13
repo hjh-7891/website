@@ -506,10 +506,50 @@ textarea { resize: vertical; min-height: 38px; line-height: 1.55; }
 
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-/* ---------------------------- 固定桌面布局 ---------------------------- */
+/* ---------------------------- 自适应布局 ---------------------------- */
 
-/* 不做窄屏降级：窗口较窄时整体横向滚动，布局保持原样 */
-.app-view { min-width: 1140px; }
+/* 桌面保持四列表单；窄屏按屏幕宽度依次降为两列、单列 */
+.app-view { min-width: 0; width: 100%; }
+
+.workspace {
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.topbar,
+.topbar-right,
+.list-head,
+.pager,
+.form-actions {
+  flex-wrap: wrap;
+}
+
+.table-wrap { overflow-x: auto; }
+
+/* 窄屏：表格保持最小可读宽度，容器内横向滚动 */
+@media (max-width: 1100px) {
+  .record-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .record-form .span-2,
+  .record-form .span-4 { grid-column: span 2; }
+  .workspace { padding: 16px 14px 24px; }
+}
+
+@media (max-width: 900px) {
+  .topbar { position: static; padding: 10px 14px; }
+  .table { min-width: 860px; }
+  .user-stats { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .record-form { grid-template-columns: minmax(0, 1fr); }
+  .record-form .span-2,
+  .record-form .span-4 { grid-column: span 1; }
+  .panel { padding: 14px 12px 12px; border-radius: 8px; }
+  .user-stats { grid-template-columns: 1fr; }
+  .field { margin-bottom: 12px; }
+  .table { min-width: 780px; }
+}
 
 /* ---------------------------- 内容防护 ---------------------------- */
 
