@@ -912,9 +912,9 @@
     var roleText = state.user.role === 'admin' ? '管理员' : '普通账号';
     var label = '用户:' + state.user.username + ' 时间:' + timeText + ' 权限:' + roleText;
 
-    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="330" height="130">' +
-      '<text x="14" y="78" fill="#0b0d10" font-size="12" font-family="sans-serif"' +
-      ' transform="rotate(-14 165 65)">' + escapeXml(label) + '</text></svg>';
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="470" height="180">' +
+      '<text x="20" y="104" fill="#0b0d10" font-size="16" font-weight="600" font-family="sans-serif"' +
+      ' transform="rotate(-14 235 90)">' + escapeXml(label) + '</text></svg>';
 
     wm.style.backgroundImage = 'url("data:image/svg+xml;charset=utf-8,' +
       encodeURIComponent(svg) + '")';

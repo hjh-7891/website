@@ -572,7 +572,7 @@ input, textarea, select {
   inset: 0;
   z-index: 900;
   pointer-events: none;
-  opacity: .12;
+  opacity: .14;
   background-repeat: repeat;
   background-position: 0 0;
 }
