@@ -547,6 +547,34 @@ input, textarea, select {
 
 body.is-blurred .app-view { filter: blur(7px); }
 
+/* ---------------------------- 失焦遮罩 ---------------------------- */
+
+body.is-away .app-view,
+body.is-away .login-view {
+  filter: blur(10px);
+  transition: filter .12s linear;
+}
+
+.away-guard {
+  position: fixed;
+  inset: 0;
+  z-index: 1900;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(12, 14, 18, .45);
+  color: #fff;
+  text-align: center;
+  padding: 24px;
+  pointer-events: none;
+}
+
+.away-guard p { margin: 0; font-size: 15px; font-weight: 600; }
+
+.away-guard-sub { font-size: 12.5px; font-weight: 400; opacity: .7; }
+
 /* 打印输出为空白 */
 @media print {
   html, body { display: none !important; }

@@ -742,6 +742,36 @@
     return (n < 10 ? '0' : '') + n;
   }
 
+  /* 失焦遮罩：切到别的应用（含系统截图工具）时立刻模糊页面 */
+  function initFocusShield() {
+    var away = $('awayGuard');
+
+    function blurNow() {
+      document.body.classList.add('is-away');
+      if (away) away.hidden = false;
+    }
+
+    function restoreNow() {
+      document.body.classList.remove('is-away');
+      if (away) away.hidden = true;
+    }
+
+    window.addEventListener('blur', blurNow);
+    window.addEventListener('focus', restoreNow);
+
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) blurNow(); else restoreNow();
+    });
+
+    // 点击页面任意位置（或遮罩）都恢复
+    document.addEventListener('pointerdown', function () {
+      if (document.body.classList.contains('is-away')) {
+        window.focus();
+        restoreNow();
+      }
+    });
+  }
+
   function updateWatermark() {
     var wm = $('wm');
     if (!wm || !state.user) return;
@@ -781,6 +811,7 @@
   function boot() {
     bindEvents();
     initProtection();
+    initFocusShield();
 
     if (!state.token) {
       $('loginView').hidden = false;
