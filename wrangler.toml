@@ -1,0 +1,10 @@
+#:schema node_modules/wrangler/config-schema.json
+name = "violation-records"
+pages_build_output_dir = "./public"
+compatibility_date = "2026-11-01"
+
+# KV 绑定：先执行 npx wrangler@latest kv namespace create DB
+# 把输出里的 id 填到下面
+[[kv_namespaces]]
+binding = "DB"
+id = "REPLACE_WITH_KV_ID"

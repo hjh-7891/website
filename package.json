@@ -1,0 +1,12 @@
+{
+  "name": "violation-records-pages",
+  "private": true,
+  "version": "1.0.0",
+  "description": "违规记录管理系统 · Cloudflare Pages + Functions + KV",
+  "scripts": {
+    "kv:create": "npx wrangler@latest kv namespace create DB",
+    "secret": "npx wrangler@latest pages secret put TOKEN_SECRET",
+    "dev": "npx wrangler@latest pages dev public",
+    "deploy": "npx wrangler@latest pages deploy public"
+  }
+}
