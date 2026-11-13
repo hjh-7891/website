@@ -907,7 +907,8 @@
 
     var now = new Date();
     var timeText = pad2(now.getFullYear() % 100) + '/' + pad2(now.getMonth() + 1) + '/' +
-      pad2(now.getDate()) + ' ' + pad2(now.getHours()) + ':' + pad2(now.getMinutes());
+      pad2(now.getDate()) + ' ' + pad2(now.getHours()) + ':' + pad2(now.getMinutes()) +
+      ':' + pad2(now.getSeconds());
     var roleText = state.user.role === 'admin' ? '管理员' : '普通账号';
     var label = '用户:' + state.user.username + ' 时间:' + timeText + ' 权限:' + roleText;
 
@@ -941,6 +942,12 @@
     bindEvents();
     initProtection();
     initFocusShield();
+
+    // 水印时间每秒重绘一次（纯本地计算，不发请求、不消耗 KV 额度）
+    setInterval(updateWatermark, 1000);
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden) updateWatermark();
+    });
 
     if (!state.token) {
       $('loginView').hidden = false;
