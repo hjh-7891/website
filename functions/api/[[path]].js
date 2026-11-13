@@ -225,6 +225,10 @@ function validateRecord(input) {
     handler: str(input.handler, 50),
     handleTime: str(input.handleTime, 30),
     handleResult: str(input.handleResult, 2000),
+    resultType: str(input.resultType, 20),
+    resultDuration: str(input.resultDuration, 10),
+    resultUnit: str(input.resultUnit, 12),
+    resultNote: str(input.resultNote, 200),
     remark: str(input.remark, 2000)
   };
 

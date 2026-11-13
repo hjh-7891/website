@@ -93,9 +93,40 @@
           <input id="rType" maxlength="100" placeholder="如：使用外挂" required>
         </div>
         <div class="field span-2">
-          <label for="rResult">处理结果 <b class="req">*</b></label>
-          <textarea id="rResult" rows="2" maxlength="2000" placeholder="如：封禁 7 天，已通知当事人" required></textarea>
+          <label for="rResultType">处理结果 <b class="req">*</b></label>
+          <select id="rResultType" required>
+            <option value="">请选择处理结果</option>
+            <option value="ban">1 · 封禁</option>
+            <option value="warn">2 · 警告</option>
+            <option value="demote">3 · 下权</option>
+            <option value="custom">自定义文本（旧记录）</option>
+          </select>
         </div>
+
+        <div class="field span-2" id="durationRow" hidden>
+          <label for="rDurationNum">时长 <b class="req">*</b></label>
+          <div class="input-group duration-group">
+            <input id="rDurationNum" type="number" min="1" max="9999" step="1" inputmode="numeric" placeholder="填写数字">
+            <select id="rDurationUnit">
+              <option value="minute">1 · 分钟</option>
+              <option value="hour">2 · 小时</option>
+              <option value="day">3 · 天</option>
+              <option value="month">4 · 月</option>
+              <option value="permanent">5 · 永久</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field span-2">
+          <label for="rResultNote">处理结果说明 <span class="opt">选填</span></label>
+          <input id="rResultNote" maxlength="200" placeholder="如：已通知当事人">
+        </div>
+
+        <div class="field span-4" id="customRow" hidden>
+          <label for="rResultCustom">处理结果原文 <b class="req">*</b></label>
+          <input id="rResultCustom" maxlength="2000" placeholder="旧记录保留的自由文本">
+        </div>
+
         <div class="field span-4">
           <label for="rRemark">备注 <span class="opt">选填</span></label>
           <textarea id="rRemark" rows="2" maxlength="2000" placeholder="补充说明"></textarea>
@@ -198,7 +229,31 @@
     <div class="field"><label for="eType">违规类型</label><input id="eType" maxlength="100" required></div>
     <div class="field"><label for="eHandler">处理人</label><input id="eHandler" maxlength="50" required></div>
     <div class="field"><label for="eTime">处理时间</label><input id="eTime" type="datetime-local" required></div>
-    <div class="field"><label for="eResult">处理结果</label><textarea id="eResult" rows="2" maxlength="2000" required></textarea></div>
+    <div class="field">
+      <label for="eResultType">处理结果</label>
+      <select id="eResultType">
+        <option value="">请选择处理结果</option>
+        <option value="ban">1 · 封禁</option>
+        <option value="warn">2 · 警告</option>
+        <option value="demote">3 · 下权</option>
+        <option value="custom">自定义文本（旧记录）</option>
+      </select>
+    </div>
+    <div class="field" id="eDurationRow" hidden>
+      <label for="eDurationNum">时长</label>
+      <div class="input-group duration-group">
+        <input id="eDurationNum" type="number" min="1" max="9999" step="1" inputmode="numeric" placeholder="填写数字">
+        <select id="eDurationUnit">
+          <option value="minute">1 · 分钟</option>
+          <option value="hour">2 · 小时</option>
+          <option value="day">3 · 天</option>
+          <option value="month">4 · 月</option>
+          <option value="permanent">5 · 永久</option>
+        </select>
+      </div>
+    </div>
+    <div class="field"><label for="eResultNote">处理结果说明</label><input id="eResultNote" maxlength="200"></div>
+    <div class="field" id="eCustomRow" hidden><label for="eResultCustom">处理结果原文</label><input id="eResultCustom" maxlength="2000"></div>
     <div class="field"><label for="eRemark">备注</label><textarea id="eRemark" rows="2" maxlength="2000"></textarea></div>
     <p class="error-text" id="editError" hidden></p>
     <div class="dlg-actions">

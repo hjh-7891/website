@@ -437,6 +437,79 @@
   }
 
   /* ---------------------------------------------------------------- */
+  /* ---------------------------------------------------------------- */
+  /* 处理结果：分选项 + 时长（封禁/下权时才需要）                      */
+  /* ---------------------------------------------------------------- */
+
+  var RESULT_LABELS = { ban: '封禁', warn: '警告', demote: '下权' };
+  var UNIT_LABELS = { minute: '分钟', hour: '小时', day: '天', month: '月', permanent: '永久' };
+
+  function needsDuration(type) {
+    return type === 'ban' || type === 'demote';
+  }
+
+  function syncResultRows(prefix) {
+    var typeEl = $(prefix + 'ResultType');
+    if (!typeEl) return;
+    var type = typeEl.value;
+    var durRow = $(prefix + 'DurationRow');
+    var customRow = $(prefix + 'CustomRow');
+    if (durRow) durRow.hidden = !needsDuration(type);
+    if (customRow) customRow.hidden = type !== 'custom';
+
+    var unitEl = $(prefix + 'DurationUnit');
+    var numEl = $(prefix + 'DurationNum');
+    if (unitEl && numEl) {
+      var isPermanent = unitEl.value === 'permanent';
+      numEl.disabled = isPermanent;
+      if (isPermanent) numEl.value = '';
+      numEl.placeholder = isPermanent ? '永久无需填写' : '填写数字';
+    }
+  }
+
+  function readResult(prefix) {
+    var type = $(prefix + 'ResultType').value;
+    var note = String($(prefix + 'ResultNote').value || '').trim();
+    var unit = $(prefix + 'DurationUnit').value;
+    var num = String($(prefix + 'DurationNum').value || '').trim();
+    var custom = String($(prefix + 'ResultCustom').value || '').trim();
+
+    var error = '';
+    var text = '';
+
+    if (!type) {
+      error = '请选择处理结果（封禁 / 警告 / 下权）';
+    } else if (type === 'custom') {
+      if (!custom) error = '请填写处理结果原文';
+      text = custom;
+    } else if (type === 'warn') {
+      text = '警告';
+    } else if (needsDuration(type)) {
+      var label = RESULT_LABELS[type];
+      if (unit === 'permanent') {
+        text = label + ' 永久';
+      } else if (!num) {
+        error = '请填写时长数字';
+      } else if (!/^\d+$/.test(num) || Number(num) < 1) {
+        error = '时长需为正整数';
+      } else {
+        text = label + ' ' + num + ' ' + UNIT_LABELS[unit];
+      }
+    }
+
+    if (!error && note) text = text ? text + ' · ' + note : note;
+
+    return {
+      error: error,
+      handleResult: text,
+      resultType: type,
+      resultDuration: needsDuration(type) && unit !== 'permanent' ? num : '',
+      resultUnit: needsDuration(type) ? unit : '',
+      resultNote: note
+    };
+  }
+
+  /* ---------------------------------------------------------------- */
   /* 记录操作                                                          */
   /* ---------------------------------------------------------------- */
 
@@ -445,13 +518,25 @@
     var tip = $('recordFormTip');
     tip.hidden = true;
 
+    var result = readResult('r');
+    if (result.error) {
+      tip.textContent = result.error;
+      tip.className = 'form-tip is-error';
+      tip.hidden = false;
+      return;
+    }
+
     var payload = {
       violator: $('rViolator').value,
       steamId: withSteamSuffix($('rSteam').value),
       violationType: $('rType').value,
       handler: $('rHandler').value,
       handleTime: $('rTime').value,
-      handleResult: $('rResult').value,
+      handleResult: result.handleResult,
+      resultType: result.resultType,
+      resultDuration: result.resultDuration,
+      resultUnit: result.resultUnit,
+      resultNote: result.resultNote,
       remark: $('rRemark').value
     };
 
@@ -459,6 +544,8 @@
       .then(function () {
         $('recordForm').reset();
         $('rTime').value = nowForInput();
+        $('rResultType').value = '';
+        syncResultRows('r');
         state.page = 1;
         toast('记录已提交');
         return loadRecords();
@@ -477,7 +564,16 @@
     $('eType').value = record.violationType || '';
     $('eHandler').value = record.handler || '';
     $('eTime').value = record.handleTime || '';
-    $('eResult').value = record.handleResult || '';
+
+    // 处理结果：优先用结构化字段，旧记录走自定义原文
+    var type = record.resultType || (record.handleResult ? 'custom' : '');
+    $('eResultType').value = type;
+    $('eDurationNum').value = record.resultDuration || '';
+    $('eDurationUnit').value = record.resultUnit || 'day';
+    $('eResultNote').value = record.resultNote || '';
+    $('eResultCustom').value = type === 'custom' ? (record.handleResult || '') : '';
+    syncResultRows('e');
+
     $('eRemark').value = record.remark || '';
     setError($('editError'), '');
     $('dlgRecord').showModal();
@@ -485,13 +581,24 @@
 
   function saveEditRecord(event) {
     event.preventDefault();
+
+    var result = readResult('e');
+    if (result.error) {
+      setError($('editError'), result.error);
+      return;
+    }
+
     var payload = {
       violator: $('eVilator').value,
       steamId: withSteamSuffix($('eSteam').value),
       violationType: $('eType').value,
       handler: $('eHandler').value,
       handleTime: $('eTime').value,
-      handleResult: $('eResult').value,
+      handleResult: result.handleResult,
+      resultType: result.resultType,
+      resultDuration: result.resultDuration,
+      resultUnit: result.resultUnit,
+      resultNote: result.resultNote,
       remark: $('eRemark').value
     };
 
@@ -645,6 +752,19 @@
 
     $('recordForm').addEventListener('submit', submitRecord);
     $('editRecordForm').addEventListener('submit', saveEditRecord);
+
+    // 处理结果联动：选了封禁/下权才显示时长，选自定义才显示原文
+    ['r', 'e'].forEach(function (prefix) {
+      var typeEl = $(prefix + 'ResultType');
+      var unitEl = $(prefix + 'DurationUnit');
+      if (typeEl) {
+        typeEl.addEventListener('change', function () { syncResultRows(prefix); });
+      }
+      if (unitEl) {
+        unitEl.addEventListener('change', function () { syncResultRows(prefix); });
+      }
+    });
+    syncResultRows('r');
     $('addUserForm').addEventListener('submit', submitAddUser);
     $('passwordForm').addEventListener('submit', submitPasswordChange);
     $('resetForm').addEventListener('submit', submitResetPassword);
