@@ -157,6 +157,32 @@ input:focus, select:focus, textarea:focus {
 
 textarea { resize: vertical; min-height: 38px; line-height: 1.55; }
 
+/* 带固定后缀的输入框（Steam64ID @steam） */
+.input-group { display: flex; align-items: stretch; }
+
+.input-group input {
+  min-width: 0;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.input-suffix {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 10px;
+  background: #f4f5f7;
+  border: 1px solid var(--line-strong);
+  border-left: none;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  color: var(--muted);
+  font-size: 12.5px;
+  white-space: nowrap;
+  user-select: none;
+}
+
+/* 表格里 Steam64ID 的后缀弱化显示 */
+.cell-suffix { color: var(--muted); font-size: 11.5px; font-weight: 400; }
+
 /* ---------------------------- 按钮 ---------------------------- */
 
 .btn {
@@ -469,6 +495,62 @@ textarea { resize: vertical; min-height: 38px; line-height: 1.55; }
 
 /* 不做窄屏降级：窗口较窄时整体横向滚动，布局保持原样 */
 .app-view { min-width: 1140px; }
+
+/* ---------------------------- 内容防护 ---------------------------- */
+
+/* 正文不可划选，输入框内仍可正常选择与复制 */
+body {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+input, textarea, select {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  user-select: text;
+}
+
+/* 全屏水印：账号 + 时间，降低截图外传价值 */
+.watermark {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  pointer-events: none;
+  opacity: .075;
+  background-repeat: repeat;
+  background-position: 0 0;
+}
+
+/* 检测到开发者工具时的遮罩 */
+.devtools-guard {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(12, 14, 18, .86);
+  color: #fff;
+  text-align: center;
+}
+
+.devtools-guard-box { max-width: 420px; }
+.devtools-guard-title { margin: 0; font-size: 17px; font-weight: 600; }
+
+.devtools-guard-sub {
+  margin: 8px 0 0;
+  font-size: 13px;
+  opacity: .72;
+}
+
+body.is-blurred .app-view { filter: blur(7px); }
+
+/* 打印输出为空白 */
+@media print {
+  html, body { display: none !important; }
+}
 
 @media print {
   .topbar, .record-form, .pager, .col-actions, .dlg, .toast { display: none !important; }

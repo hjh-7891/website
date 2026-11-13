@@ -71,7 +71,10 @@
       <form id="recordForm" class="record-form" autocomplete="off">
         <div class="field">
           <label for="rSteam">Steam64ID <b class="req">*</b></label>
-          <input id="rSteam" maxlength="50" placeholder="7656119xxxxxxxxxx" required>
+          <div class="input-group">
+            <input id="rSteam" maxlength="50" placeholder="7656119xxxxxxxxxx" required>
+            <span class="input-suffix">@steam</span>
+          </div>
         </div>
         <div class="field">
           <label for="rType">违规类型 <b class="req">*</b></label>
@@ -185,7 +188,7 @@
 <dialog id="dlgRecord" class="dlg">
   <form id="editRecordForm" method="dialog" class="dlg-form" autocomplete="off">
     <h3>编辑违规记录</h3>
-    <div class="field"><label for="eSteam">Steam64ID</label><input id="eSteam" maxlength="50" required></div>
+    <div class="field"><label for="eSteam">Steam64ID</label><div class="input-group"><input id="eSteam" maxlength="50" required><span class="input-suffix">@steam</span></div></div>
     <div class="field"><label for="eType">违规类型</label><input id="eType" maxlength="100" required></div>
     <div class="field"><label for="eHandler">处理人</label><input id="eHandler" maxlength="50" required></div>
     <div class="field"><label for="eTime">处理时间</label><input id="eTime" type="datetime-local" required></div>
@@ -250,6 +253,17 @@
 </dialog>
 
 <div id="toast" class="toast" hidden></div>
+
+<!-- 全屏水印（登录后显示，记录当前账号与时间） -->
+<div id="wm" class="watermark" hidden aria-hidden="true"></div>
+
+<!-- 开发者工具提示遮罩 -->
+<div id="devtoolsGuard" class="devtools-guard" hidden>
+  <div class="devtools-guard-box">
+    <p class="devtools-guard-title">检测到开发者工具已打开</p>
+    <p class="devtools-guard-sub">请关闭开发者工具后继续使用本系统</p>
+  </div>
+</div>
 
 <script src="app.js"></script>
 </body>

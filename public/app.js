@@ -8,6 +8,7 @@
   var TOKEN_KEY = 'vr_token';
   var REMEMBER_KEY = 'vr_remember_30d';
   var REMEMBER_DAYS = 30;
+  var STEAM_SUFFIX = '@steam';
   var PAGE_SIZE = 10;
 
   var state = {
@@ -150,6 +151,7 @@
     $('appView').hidden = true;
     $('loginView').hidden = false;
     $('recordForm').reset();
+    hideWatermark();
     if (message) setError($('loginError'), message);
     window.scrollTo(0, 0);
   }
@@ -168,6 +170,7 @@
     $('currentUserRole').textContent = user.role === 'admin' ? '管理员' : '普通账号';
     $('rTime').value = nowForInput();
     setError($('loginError'), '');
+    updateWatermark();
     refreshAll();
   }
 
@@ -212,6 +215,22 @@
   /* ---------------------------------------------------------------- */
   /* 数据加载与渲染                                                    */
   /* ---------------------------------------------------------------- */
+
+  /* Steam64ID 统一带固定后缀 @steam：填写时只输数字，存库存完整形式 */
+  function withSteamSuffix(value) {
+    var v = String(value == null ? '' : value).trim();
+    if (!v) return '';
+    var tail = v.toLowerCase().slice(-STEAM_SUFFIX.length);
+    return tail === STEAM_SUFFIX ? v : v + STEAM_SUFFIX;
+  }
+
+  function stripSteamSuffix(value) {
+    var v = String(value == null ? '' : value).trim();
+    if (v && v.toLowerCase().slice(-STEAM_SUFFIX.length) === STEAM_SUFFIX) {
+      return v.slice(0, v.length - STEAM_SUFFIX.length);
+    }
+    return v;
+  }
 
   function refreshAll() {
     var tasks = [loadRecords()];
@@ -279,7 +298,18 @@
     pageItems.forEach(function (r) {
       var tr = document.createElement('tr');
 
-      tr.appendChild(cell(r.steamId, 'cell-mono'));
+      var storedSteam = String(r.steamId || '');
+      var steamBase = stripSteamSuffix(storedSteam);
+      var steamCell = document.createElement('td');
+      steamCell.className = 'cell-mono';
+      steamCell.textContent = steamBase;
+      if (storedSteam.length !== steamBase.length) {
+        var steamTail = document.createElement('span');
+        steamTail.className = 'cell-suffix';
+        steamTail.textContent = STEAM_SUFFIX;
+        steamCell.appendChild(steamTail);
+      }
+      tr.appendChild(steamCell);
       tr.appendChild(cell(r.violationType, 'cell-strong'));
       tr.appendChild(cell(r.handleResult, 'clamp-2', r.handleResult));
       tr.appendChild(cell(r.handler));
@@ -410,7 +440,7 @@
     tip.hidden = true;
 
     var payload = {
-      steamId: $('rSteam').value,
+      steamId: withSteamSuffix($('rSteam').value),
       violationType: $('rType').value,
       handler: $('rHandler').value,
       handleTime: $('rTime').value,
@@ -435,7 +465,7 @@
 
   function openEditRecord(record) {
     state.editingId = record.id;
-    $('eSteam').value = record.steamId || '';
+    $('eSteam').value = stripSteamSuffix(record.steamId || '');
     $('eType').value = record.violationType || '';
     $('eHandler').value = record.handler || '';
     $('eTime').value = record.handleTime || '';
@@ -448,7 +478,7 @@
   function saveEditRecord(event) {
     event.preventDefault();
     var payload = {
-      steamId: $('eSteam').value,
+      steamId: withSteamSuffix($('eSteam').value),
       violationType: $('eType').value,
       handler: $('eHandler').value,
       handleTime: $('eTime').value,
@@ -649,11 +679,90 @@
   }
 
   /* ---------------------------------------------------------------- */
+  /* 内容防护：右键/快捷键/复制/打印/开发者工具/水印                    */
+  /* ---------------------------------------------------------------- */
+
+  function isFormField(el) {
+    return !!el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
+  }
+
+  function initProtection() {
+    // 右键菜单
+    document.addEventListener('contextmenu', function (event) {
+      event.preventDefault();
+    }, true);
+
+    // 快捷键：F12 / Ctrl+Shift+I J C K / Ctrl+U 源码 / Ctrl+S 保存 / Ctrl+P 打印
+    document.addEventListener('keydown', function (event) {
+      var key = String(event.key || '').toLowerCase();
+      if (event.keyCode === 123) { event.preventDefault(); return; }              // F12
+      if (event.ctrlKey && event.shiftKey && ['i', 'j', 'c', 'k', 'e'].indexOf(key) !== -1) {
+        event.preventDefault(); return;
+      }
+      if (event.ctrlKey && ['u', 's', 'p'].indexOf(key) !== -1) { event.preventDefault(); return; }
+    }, true);
+
+    // 复制 / 剪切 / 拖拽 / 划选：只允许在输入框内
+    ['copy', 'cut', 'dragstart'].forEach(function (type) {
+      document.addEventListener(type, function (event) {
+        if (!isFormField(event.target)) {
+          event.preventDefault();
+          toast('禁止复制页面内容', true);
+        }
+      }, true);
+    });
+
+    document.addEventListener('selectstart', function (event) {
+      if (!isFormField(event.target)) event.preventDefault();
+    }, true);
+
+    // PrintScreen：拦不住系统截图，只能尽量污染剪贴板
+    document.addEventListener('keyup', function (event) {
+      if (event.keyCode !== 44 && String(event.key || '') !== 'PrintScreen') return;
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText('青枫社区 · 本页面内容受保护，请勿截屏外传');
+        }
+      } catch (err) { /* 浏览器不允许时忽略 */ }
+    }, true);
+
+    // 开发者工具检测：判断窗口可视区是否被挤压
+    var guard = $('devtoolsGuard');
+    function checkDevtools() {
+      var isOpen = (window.outerWidth - window.innerWidth > 170) ||
+                   (window.outerHeight - window.innerHeight > 220);
+      if (guard) guard.hidden = !isOpen;
+      document.body.classList.toggle('is-blurred', isOpen);
+    }
+    checkDevtools();
+    setInterval(checkDevtools, 800);
+  }
+
+  function updateWatermark() {
+    var wm = $('wm');
+    if (!wm || !state.user) return;
+    var label = state.user.username + ' · ' +
+      new Date().toLocaleString('zh-CN', { hour12: false });
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="420" height="280">' +
+      '<text x="40" y="170" fill="#0b0d10" font-size="14" font-family="sans-serif"' +
+      ' transform="rotate(-20 210 140)">' + label.replace(/&/g, '&amp;') + '</text></svg>';
+    wm.style.backgroundImage = 'url("data:image/svg+xml;charset=utf-8,' +
+      encodeURIComponent(svg) + '")';
+    wm.hidden = false;
+  }
+
+  function hideWatermark() {
+    var wm = $('wm');
+    if (wm) wm.hidden = true;
+  }
+
+  /* ---------------------------------------------------------------- */
   /* 启动                                                              */
   /* ---------------------------------------------------------------- */
 
   function boot() {
     bindEvents();
+    initProtection();
 
     if (!state.token) {
       $('loginView').hidden = false;
