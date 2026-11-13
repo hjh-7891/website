@@ -258,7 +258,7 @@
     var keyword = state.search.trim().toLowerCase();
     if (!keyword) return state.records;
     return state.records.filter(function (r) {
-      return [r.steamId, r.violationType, r.handler, r.handleResult, r.remark]
+      return [r.violator, r.steamId, r.handler, r.violationType, r.handleResult, r.remark]
         .join(' ').toLowerCase().indexOf(keyword) !== -1;
     });
   }
@@ -298,6 +298,10 @@
     pageItems.forEach(function (r) {
       var tr = document.createElement('tr');
 
+      // 违规人
+      tr.appendChild(cell(r.violator || '—', 'cell-strong'));
+
+      // 64ID（带 @steam 后缀，弱化显示）
       var storedSteam = String(r.steamId || '');
       var steamBase = stripSteamSuffix(storedSteam);
       var steamCell = document.createElement('td');
@@ -310,10 +314,12 @@
         steamCell.appendChild(steamTail);
       }
       tr.appendChild(steamCell);
-      tr.appendChild(cell(r.violationType, 'cell-strong'));
-      tr.appendChild(cell(r.handleResult, 'clamp-2', r.handleResult));
+
+      // 处理人 / 处理时间 / 处理结果 / 违规类型 / 备注
       tr.appendChild(cell(r.handler));
       tr.appendChild(cell(formatDateTime(r.handleTime)));
+      tr.appendChild(cell(r.handleResult, 'clamp-2', r.handleResult));
+      tr.appendChild(cell(r.violationType));
       tr.appendChild(cell(r.remark, 'clamp-2', r.remark));
 
       var actions = document.createElement('td');
@@ -440,6 +446,7 @@
     tip.hidden = true;
 
     var payload = {
+      violator: $('rViolator').value,
       steamId: withSteamSuffix($('rSteam').value),
       violationType: $('rType').value,
       handler: $('rHandler').value,
@@ -465,6 +472,7 @@
 
   function openEditRecord(record) {
     state.editingId = record.id;
+    $('eVilator').value = record.violator || '';
     $('eSteam').value = stripSteamSuffix(record.steamId || '');
     $('eType').value = record.violationType || '';
     $('eHandler').value = record.handler || '';
@@ -478,6 +486,7 @@
   function saveEditRecord(event) {
     event.preventDefault();
     var payload = {
+      violator: $('eVilator').value,
       steamId: withSteamSuffix($('eSteam').value),
       violationType: $('eType').value,
       handler: $('eHandler').value,

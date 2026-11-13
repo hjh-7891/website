@@ -70,15 +70,15 @@
 
       <form id="recordForm" class="record-form" autocomplete="off">
         <div class="field">
-          <label for="rSteam">Steam64ID <b class="req">*</b></label>
+          <label for="rViolator">违规人 <b class="req">*</b></label>
+          <input id="rViolator" maxlength="50" placeholder="违规人昵称" required>
+        </div>
+        <div class="field">
+          <label for="rSteam">64ID <b class="req">*</b></label>
           <div class="input-group">
             <input id="rSteam" maxlength="50" placeholder="7656119xxxxxxxxxx" required>
             <span class="input-suffix">@steam</span>
           </div>
-        </div>
-        <div class="field">
-          <label for="rType">违规类型 <b class="req">*</b></label>
-          <input id="rType" maxlength="100" placeholder="如：使用外挂" required>
         </div>
         <div class="field">
           <label for="rHandler">处理人 <b class="req">*</b></label>
@@ -89,10 +89,14 @@
           <input id="rTime" type="datetime-local" required>
         </div>
         <div class="field span-2">
+          <label for="rType">违规类型 <b class="req">*</b></label>
+          <input id="rType" maxlength="100" placeholder="如：使用外挂" required>
+        </div>
+        <div class="field span-2">
           <label for="rResult">处理结果 <b class="req">*</b></label>
           <textarea id="rResult" rows="2" maxlength="2000" placeholder="如：封禁 7 天，已通知当事人" required></textarea>
         </div>
-        <div class="field span-2">
+        <div class="field span-4">
           <label for="rRemark">备注 <span class="opt">选填</span></label>
           <textarea id="rRemark" rows="2" maxlength="2000" placeholder="补充说明"></textarea>
         </div>
@@ -109,24 +113,25 @@
       <div class="panel-head">
         <div>
           <h2>违规记录列表 <span class="count" id="recordCount">0</span></h2>
-          <p class="panel-sub">按 Steam64ID、违规类型、处理人、处理结果或备注筛选</p>
+          <p class="panel-sub">按违规人、64ID、处理人、违规类型、处理结果或备注筛选</p>
         </div>
       </div>
 
       <div class="search-row">
-        <input id="recordSearch" class="search" placeholder="搜索 Steam64ID / 违规类型 / 处理人 / 处理结果 / 备注">
+        <input id="recordSearch" class="search" placeholder="搜索 违规人 / 64ID / 处理人 / 违规类型 / 处理结果 / 备注">
       </div>
 
       <div class="table-wrap">
         <table class="table" id="recordTable">
           <thead>
             <tr>
-              <th style="width:16%">Steam64ID</th>
-              <th style="width:13%">违规类型</th>
-              <th style="width:19%">处理结果</th>
-              <th style="width:9%">处理人</th>
-              <th style="width:13%">处理时间</th>
-              <th style="width:20%">备注</th>
+              <th style="width:12%">违规人</th>
+              <th style="width:16%">64ID</th>
+              <th style="width:8%">处理人</th>
+              <th style="width:12%">处理时间</th>
+              <th style="width:16%">处理结果</th>
+              <th style="width:11%">违规类型</th>
+              <th style="width:15%">备注</th>
               <th style="width:10%" class="col-actions admin-only">操作</th>
             </tr>
           </thead>
@@ -188,7 +193,8 @@
 <dialog id="dlgRecord" class="dlg">
   <form id="editRecordForm" method="dialog" class="dlg-form" autocomplete="off">
     <h3>编辑违规记录</h3>
-    <div class="field"><label for="eSteam">Steam64ID</label><div class="input-group"><input id="eSteam" maxlength="50" required><span class="input-suffix">@steam</span></div></div>
+    <div class="field"><label for="eVilator">违规人</label><input id="eVilator" maxlength="50" required></div>
+    <div class="field"><label for="eSteam">64ID</label><div class="input-group"><input id="eSteam" maxlength="50" required><span class="input-suffix">@steam</span></div></div>
     <div class="field"><label for="eType">违规类型</label><input id="eType" maxlength="100" required></div>
     <div class="field"><label for="eHandler">处理人</label><input id="eHandler" maxlength="50" required></div>
     <div class="field"><label for="eTime">处理时间</label><input id="eTime" type="datetime-local" required></div>

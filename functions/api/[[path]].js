@@ -219,6 +219,7 @@ async function currentUser(request, env, db) {
 
 function validateRecord(input) {
   const record = {
+    violator: str(input.violator, 50),
     steamId: str(input.steamId, 50),
     violationType: str(input.violationType, 100),
     handler: str(input.handler, 50),
@@ -227,6 +228,7 @@ function validateRecord(input) {
     remark: str(input.remark, 2000)
   };
 
+  if (!record.violator) return { error: '违规人不能为空' };
   if (!record.steamId) return { error: 'Steam64ID 不能为空' };
   if (!record.violationType) return { error: '违规类型不能为空' };
   if (!record.handler) return { error: '处理人不能为空' };
