@@ -26,7 +26,7 @@
 需要：这台电脑有 Node（`node -v` 有输出）、一个 Cloudflare 账号。
 
 ```powershell
-cd "C:\Users\WUYUE\Doubao\chats\2026-11-13\new-chat\违规记录管理系统-PF"
+cd "C:\Users\*\Doubao\chats\2026-11-13\new-chat\违规记录管理系统-PF"
 
 # 1. 登录（弹浏览器，点 Allow）
 npx wrangler@latest login
