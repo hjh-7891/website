@@ -99,7 +99,7 @@
             <option value="ban">封禁</option>
             <option value="warn">警告</option>
             <option value="demote">下权</option>
-            <option value="custom">自定义文本（旧记录）</option>
+            <option value="custom">其他</option>
           </select>
         </div>
 
@@ -117,14 +117,22 @@
           </div>
         </div>
 
+        <div class="field span-2" id="rWarnRow" hidden>
+          <label for="rWarnCount">警告次数 <b class="req">*</b></label>
+          <div class="input-group duration-group">
+            <input id="rWarnCount" type="number" min="1" max="999" step="1" inputmode="numeric" placeholder="填写数字">
+            <span class="input-suffix">次</span>
+          </div>
+        </div>
+
         <div class="field span-2">
           <label for="rResultNote">处理结果说明 <span class="opt">选填</span></label>
           <input id="rResultNote" maxlength="200" placeholder="如：已通知当事人">
         </div>
 
         <div class="field span-4" id="rCustomRow" hidden>
-          <label for="rResultCustom">处理结果原文 <b class="req">*</b></label>
-          <input id="rResultCustom" maxlength="2000" placeholder="旧记录保留的自由文本">
+          <label for="rResultCustom">其他处理结果 <b class="req">*</b></label>
+          <input id="rResultCustom" maxlength="2000" placeholder="填写具体处理结果，如：移交上级处理">
         </div>
 
         <div class="field span-4">
@@ -237,7 +245,7 @@
         <option value="ban">封禁</option>
         <option value="warn">警告</option>
         <option value="demote">下权</option>
-        <option value="custom">自定义文本（旧记录）</option>
+        <option value="custom">其他</option>
       </select>
     </div>
     <div class="field" id="eDurationRow" hidden>
@@ -253,8 +261,15 @@
         </select>
       </div>
     </div>
+    <div class="field" id="eWarnRow" hidden>
+      <label for="eWarnCount">警告次数</label>
+      <div class="input-group duration-group">
+        <input id="eWarnCount" type="number" min="1" max="999" step="1" inputmode="numeric" placeholder="填写数字">
+        <span class="input-suffix">次</span>
+      </div>
+    </div>
     <div class="field"><label for="eResultNote">处理结果说明</label><input id="eResultNote" maxlength="200"></div>
-    <div class="field" id="eCustomRow" hidden><label for="eResultCustom">处理结果原文</label><input id="eResultCustom" maxlength="2000"></div>
+    <div class="field" id="eCustomRow" hidden><label for="eResultCustom">其他处理结果</label><input id="eResultCustom" maxlength="2000" placeholder="填写具体处理结果"></div>
     <div class="field"><label for="eRemark">备注</label><textarea id="eRemark" rows="2" maxlength="2000"></textarea></div>
     <p class="error-text" id="editError" hidden></p>
     <div class="dlg-actions">

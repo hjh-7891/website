@@ -483,7 +483,9 @@
     var type = typeEl.value;
     var durRow = $(prefix + 'DurationRow');
     var customRow = $(prefix + 'CustomRow');
+    var warnRow = $(prefix + 'WarnRow');
     if (durRow) durRow.hidden = !needsDuration(type);
+    if (warnRow) warnRow.hidden = type !== 'warn';
     if (customRow) customRow.hidden = type !== 'custom';
 
     var unitEl = $(prefix + 'DurationUnit');
@@ -502,17 +504,24 @@
     var unit = $(prefix + 'DurationUnit').value;
     var num = String($(prefix + 'DurationNum').value || '').trim();
     var custom = String($(prefix + 'ResultCustom').value || '').trim();
+    var warnCount = String($(prefix + 'WarnCount').value || '').trim();
 
     var error = '';
     var text = '';
 
     if (!type) {
-      error = '请选择处理结果（封禁 / 警告 / 下权）';
+      error = '请选择处理结果（封禁 / 警告 / 下权 / 其他）';
     } else if (type === 'custom') {
-      if (!custom) error = '请填写处理结果原文';
+      if (!custom) error = '选了「其他」需填写具体处理结果';
       text = custom;
     } else if (type === 'warn') {
-      text = '警告';
+      if (!warnCount) {
+        error = '请填写警告次数';
+      } else if (!/^\d+$/.test(warnCount) || Number(warnCount) < 1) {
+        error = '警告次数需为正整数';
+      } else {
+        text = '第' + warnCount + '次警告';
+      }
     } else if (needsDuration(type)) {
       var label = RESULT_LABELS[type];
       if (unit === 'permanent') {
@@ -601,6 +610,9 @@
     $('eDurationUnit').value = record.resultUnit || 'day';
     $('eResultNote').value = record.resultNote || '';
     $('eResultCustom').value = type === 'custom' ? (record.handleResult || '') : '';
+
+    var warnMatch = /第\s*(\d+)\s*次警告/.exec(record.handleResult || '');
+    $('eWarnCount').value = type === 'warn' && warnMatch ? warnMatch[1] : '';
     syncResultRows('e');
 
     $('eRemark').value = record.remark || '';
