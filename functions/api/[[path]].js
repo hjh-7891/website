@@ -67,6 +67,32 @@ function randomSalt() {
   return Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
+/* 溯源标识：每个账号一个 token，形如 QF-3A9C7F21，用于水印溯源 */
+function makeTraceToken() {
+  const bytes = crypto.getRandomValues(new Uint8Array(4));
+  const hex = Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('');
+  return 'QF-' + hex.toUpperCase();
+}
+
+function uniqueTraceToken(db) {
+  const taken = new Set(db.users.map((u) => u.traceToken).filter(Boolean));
+  let token = makeTraceToken();
+  while (taken.has(token)) token = makeTraceToken();
+  return token;
+}
+
+/* 老数据（没有标识 / UUID / 其它格式）统一换回 token，有改动才需要写回 KV */
+function ensureTraceTokens(db) {
+  let changed = false;
+  db.users.forEach((u) => {
+    if (!/^QF-[0-9A-F]{8}$/.test(String(u.traceToken || ''))) {
+      u.traceToken = uniqueTraceToken(db);
+      changed = true;
+    }
+  });
+  return changed;
+}
+
 /* ------------------------------------------------------------------ */
 /* 数据库（KV 里一个 JSON）                                            */
 /* ------------------------------------------------------------------ */
@@ -80,6 +106,7 @@ async function seedDb(env) {
       {
         id: newId('u'),
         username: 'admin',
+        traceToken: makeTraceToken(),
         salt,
         passwordHash,
         pv: 1,
@@ -195,6 +222,7 @@ function publicUser(user) {
   return {
     id: user.id,
     username: user.username,
+    traceToken: user.traceToken,
     role: user.role,
     status: user.status,
     createdAt: user.createdAt
@@ -273,6 +301,9 @@ async function handleApi(request, env, url) {
   }
 
   const db = await readDb(env);
+
+  // 老用户的账号数据补发溯源标识（只有真补了才写回 KV）
+  if (ensureTraceTokens(db)) await writeDb(env, db);
 
   /* ---- 登录（不需要 token） ---- */
   if (path === '/api/login' && method === 'POST') {
@@ -399,6 +430,7 @@ async function handleApi(request, env, url) {
     const user = {
       id: newId('u'),
       username,
+      traceToken: uniqueTraceToken(db),
       salt,
       passwordHash: await hashPassword(salt, password),
       pv: 1,

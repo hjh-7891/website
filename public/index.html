@@ -50,7 +50,7 @@
       <span class="topbar-title">青枫社区违规处罚记录系统</span>
     </div>
     <div class="topbar-right">
-      <span class="who"><span id="currentUserLabel"></span><span class="role-tag" id="currentUserRole"></span></span>
+      <span class="who"><span id="currentUserLabel"></span><span class="role-tag" id="currentUserRole"></span><span class="trace-chip" id="currentUserToken" title="Token（截图外泄时可凭此定位账号）"></span></span>
       <button type="button" class="btn btn-ghost" id="btnUserManage">账号管理</button>
       <button type="button" class="btn btn-ghost" id="btnChangePassword">修改密码</button>
       <button type="button" class="btn btn-ghost" id="btnLogout">退出登录</button>
@@ -204,10 +204,11 @@
         <table class="table table-user">
           <thead>
             <tr>
-              <th style="width:26%">用户名</th>
-              <th style="width:14%">角色</th>
-              <th style="width:12%">状态</th>
-              <th style="width:20%">创建时间</th>
+              <th style="width:20%">用户名</th>
+              <th style="width:15%">Token</th>
+              <th style="width:10%">角色</th>
+              <th style="width:9%">状态</th>
+              <th style="width:18%">创建时间</th>
               <th style="width:28%" class="col-actions admin-only">操作</th>
             </tr>
           </thead>

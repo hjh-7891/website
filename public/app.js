@@ -43,6 +43,16 @@
     }, 2200);
   }
 
+  function copyText(text, okMessage) {
+    if (!text) return;
+    var done = function () { toast(okMessage); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done).catch(done);
+    } else {
+      done();
+    }
+  }
+
   function setError(el, message) {
     if (!message) {
       el.hidden = true;
@@ -168,6 +178,9 @@
     $('appView').classList.toggle('is-admin', user.role === 'admin');
     $('currentUserLabel').textContent = user.username;
     $('currentUserRole').textContent = user.role === 'admin' ? '管理员' : '普通账号';
+    var trace = user.traceToken || '';
+    $('currentUserToken').textContent = trace;
+    $('currentUserToken').title = trace ? ('Token ' + trace + '（点击复制）') : '';
     $('rTime').value = nowForInput();
     setError($('loginError'), '');
     updateWatermark();
@@ -380,6 +393,22 @@
         nameCell.appendChild(me);
       }
       tr.appendChild(nameCell);
+
+      // Token：管理员可见，点击复制，用于拿截图找人对账号
+      var tokenCell = document.createElement('td');
+      var tokenSpan = document.createElement('span');
+      tokenSpan.className = 'cell-token';
+      tokenSpan.textContent = u.traceToken || '—';
+      if (u.traceToken) {
+        tokenSpan.title = '点击复制';
+        tokenSpan.addEventListener('click', function () {
+          copyText(u.traceToken, '已复制 Token ' + u.traceToken);
+        });
+      } else {
+        tokenSpan.className = 'muted-dash';
+      }
+      tokenCell.appendChild(tokenSpan);
+      tr.appendChild(tokenCell);
 
       var roleCell = document.createElement('td');
       var roleBadge = document.createElement('span');
@@ -766,6 +795,13 @@
     });
     syncResultRows('r');
     $('addUserForm').addEventListener('submit', submitAddUser);
+
+    // 顶栏的 Token：点一下复制
+    $('currentUserToken').addEventListener('click', function () {
+      if (state.user && state.user.traceToken) {
+        copyText(state.user.traceToken, '已复制 Token ' + state.user.traceToken);
+      }
+    });
     $('passwordForm').addEventListener('submit', submitPasswordChange);
     $('resetForm').addEventListener('submit', submitResetPassword);
 
@@ -929,7 +965,7 @@
     var id = '';
     try { id = localStorage.getItem(DEVICE_KEY) || ''; } catch (err) { id = ''; }
 
-    if (!id) {
+    if (!/^[0-9a-f]{6}$/i.test(id)) {
       var rand = '';
       try {
         var buf = new Uint8Array(3);
@@ -958,9 +994,10 @@
       ':' + pad2(now.getSeconds());
     var label = timeText + '   设备:' + deviceTag() + '   用户:' + state.user.username;
 
-    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="430" height="170">' +
-      '<text x="16" y="97" fill="#0b0d10" font-size="13" font-family="sans-serif"' +
-      ' transform="rotate(-14 215 85)">' + escapeXml(label) + '</text></svg>';
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="470" height="175">' +
+      '<text x="16" y="100" fill="#0b0d10" font-size="13"' +
+      ' font-family="Segoe UI, Microsoft YaHei, sans-serif"' +
+      ' transform="rotate(-14 235 87)">' + escapeXml(label) + '</text></svg>';
 
     wm.style.backgroundImage = 'url("data:image/svg+xml;charset=utf-8,' +
       encodeURIComponent(svg) + '")';
