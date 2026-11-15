@@ -901,20 +901,66 @@
     });
   }
 
+  /* 设备标识：系统+浏览器 + 本机随机码（存在 localStorage，换浏览器/清缓存会变） */
+  var DEVICE_KEY = 'vr_device_id';
+  var deviceTagCache = '';
+
+  function platformLabel() {
+    var ua = navigator.userAgent || '';
+    var os = 'Web';
+    if (/Windows/.test(ua)) os = 'Win';
+    else if (/Macintosh|Mac OS X/.test(ua)) os = 'Mac';
+    else if (/Android/.test(ua)) os = 'Android';
+    else if (/iPhone|iPad|iPod/.test(ua)) os = 'iOS';
+    else if (/Linux/.test(ua)) os = 'Linux';
+
+    var br = 'Browser';
+    if (/Edg\//.test(ua)) br = 'Edge';
+    else if (/Chrome\//.test(ua)) br = 'Chrome';
+    else if (/Firefox\//.test(ua)) br = 'Firefox';
+    else if (/Safari\//.test(ua)) br = 'Safari';
+
+    return os + '-' + br;
+  }
+
+  function deviceTag() {
+    if (deviceTagCache) return deviceTagCache;
+
+    var id = '';
+    try { id = localStorage.getItem(DEVICE_KEY) || ''; } catch (err) { id = ''; }
+
+    if (!id) {
+      var rand = '';
+      try {
+        var buf = new Uint8Array(3);
+        window.crypto.getRandomValues(buf);
+        for (var i = 0; i < buf.length; i += 1) {
+          rand += ('0' + buf[i].toString(16)).slice(-2);
+        }
+      } catch (err) {
+        rand = String(Math.random()).slice(2, 8);
+      }
+      id = rand.slice(0, 6);
+      try { localStorage.setItem(DEVICE_KEY, id); } catch (err) { /* 忽略 */ }
+    }
+
+    deviceTagCache = platformLabel() + '-' + id;
+    return deviceTagCache;
+  }
+
   function updateWatermark() {
     var wm = $('wm');
     if (!wm || !state.user) return;
 
     var now = new Date();
-    var timeText = pad2(now.getFullYear() % 100) + '/' + pad2(now.getMonth() + 1) + '/' +
+    var timeText = now.getFullYear() + '/' + pad2(now.getMonth() + 1) + '/' +
       pad2(now.getDate()) + ' ' + pad2(now.getHours()) + ':' + pad2(now.getMinutes()) +
       ':' + pad2(now.getSeconds());
-    var roleText = state.user.role === 'admin' ? '管理员' : '普通账号';
-    var label = '用户:' + state.user.username + ' 时间:' + timeText + ' 权限:' + roleText;
+    var label = timeText + '   设备:' + deviceTag() + '   用户:' + state.user.username;
 
-    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="470" height="180">' +
-      '<text x="20" y="104" fill="#0b0d10" font-size="16" font-weight="600" font-family="sans-serif"' +
-      ' transform="rotate(-14 235 90)">' + escapeXml(label) + '</text></svg>';
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="430" height="170">' +
+      '<text x="16" y="97" fill="#0b0d10" font-size="13" font-family="sans-serif"' +
+      ' transform="rotate(-14 215 85)">' + escapeXml(label) + '</text></svg>';
 
     wm.style.backgroundImage = 'url("data:image/svg+xml;charset=utf-8,' +
       encodeURIComponent(svg) + '")';
