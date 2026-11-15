@@ -937,50 +937,33 @@
     });
   }
 
-  /* 设备标识：系统+浏览器 + 本机随机码（存在 localStorage，换浏览器/清缓存会变） */
-  var DEVICE_KEY = 'vr_device_id';
+  /* 设备 Token：每台浏览器一个 QF-xxxxxxxx，存在 localStorage，换浏览器/清缓存会换新的 */
+  var DEVICE_KEY = 'vr_device_token';
   var deviceTagCache = '';
 
-  function platformLabel() {
-    var ua = navigator.userAgent || '';
-    var os = 'Web';
-    if (/Windows/.test(ua)) os = 'Win';
-    else if (/Macintosh|Mac OS X/.test(ua)) os = 'Mac';
-    else if (/Android/.test(ua)) os = 'Android';
-    else if (/iPhone|iPad|iPod/.test(ua)) os = 'iOS';
-    else if (/Linux/.test(ua)) os = 'Linux';
-
-    var br = 'Browser';
-    if (/Edg\//.test(ua)) br = 'Edge';
-    else if (/Chrome\//.test(ua)) br = 'Chrome';
-    else if (/Firefox\//.test(ua)) br = 'Firefox';
-    else if (/Safari\//.test(ua)) br = 'Safari';
-
-    return os + '-' + br;
-  }
-
-  function deviceTag() {
+  function deviceToken() {
     if (deviceTagCache) return deviceTagCache;
 
     var id = '';
     try { id = localStorage.getItem(DEVICE_KEY) || ''; } catch (err) { id = ''; }
 
-    if (!/^[0-9a-f]{6}$/i.test(id)) {
-      var rand = '';
+    if (!/^QF-[0-9A-F]{8}$/.test(id)) {
+      var hex = '';
       try {
-        var buf = new Uint8Array(3);
+        var buf = new Uint8Array(4);
         window.crypto.getRandomValues(buf);
         for (var i = 0; i < buf.length; i += 1) {
-          rand += ('0' + buf[i].toString(16)).slice(-2);
+          hex += ('0' + buf[i].toString(16)).slice(-2);
         }
       } catch (err) {
-        rand = String(Math.random()).slice(2, 8);
+        hex = '';
+        for (var j = 0; j < 8; j += 1) hex += '0123456789abcdef'.charAt(Math.floor(Math.random() * 16));
       }
-      id = rand.slice(0, 6);
+      id = 'QF-' + hex.toUpperCase();
       try { localStorage.setItem(DEVICE_KEY, id); } catch (err) { /* 忽略 */ }
     }
 
-    deviceTagCache = platformLabel() + '-' + id;
+    deviceTagCache = id;
     return deviceTagCache;
   }
 
@@ -992,7 +975,7 @@
     var timeText = now.getFullYear() + '/' + pad2(now.getMonth() + 1) + '/' +
       pad2(now.getDate()) + ' ' + pad2(now.getHours()) + ':' + pad2(now.getMinutes()) +
       ':' + pad2(now.getSeconds());
-    var label = timeText + '   设备:' + deviceTag() + '   用户:' + state.user.username;
+    var label = timeText + '   设备:' + deviceToken() + '   用户:' + state.user.username;
 
     var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="470" height="175">' +
       '<text x="16" y="100" fill="#0b0d10" font-size="13"' +
